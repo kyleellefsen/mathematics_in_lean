@@ -1,5 +1,7 @@
 import MIL.Common
 
+#eval Lean.versionString
+
 open Nat
 
 -- These are pieces of data.
