@@ -4,6 +4,12 @@ import MIL.Common
 
 section
 variable (R : Type*) [Ring R]
+variable (a b : R)
+#check (zero_add)
+#check a
+
+-- variable (F : Type*) [Field R]
+-- variable (α β: F)
 
 #check (add_assoc : ∀ a b c : R, a + b + c = a + (b + c))
 #check (add_comm : ∀ a b : R, a + b = b + a)
@@ -21,7 +27,10 @@ section
 variable (R : Type*) [CommRing R]
 variable (a b c d : R)
 
-example : c * b * a = b * (a * c) := by ring
+example : c * b * a = b * (a * c) := by
+  rw [mul_assoc]
+  rw [mul_comm]
+  rw [mul_assoc]
 
 example : (a + b) * (a + b) = a * a + 2 * (a * b) + b * b := by ring
 
@@ -53,13 +62,30 @@ theorem neg_add_cancel_left (a b : R) : -a + (a + b) = b := by
 
 -- Prove these:
 theorem add_neg_cancel_right (a b : R) : a + b + -b = a := by
-  sorry
+  rw [add_assoc]
+  rw [add_right_neg b]
+  rw [add_zero]
 
 theorem add_left_cancel {a b c : R} (h : a + b = a + c) : b = c := by
-  sorry
+  calc
+    b = 0 + b := by rw [zero_add]
+    _ = (-a + a) + b := by rw [neg_add_cancel]
+    _ = -a + (a + b) := by rw [add_assoc]
+    _ = -a + (a + c) := by rw [h]
+    _ = (-a + a) + c := by rw [add_assoc]
+    _ = 0 + c := by rw [neg_add_cancel]
+    _ = c := by rw [zero_add]
+
 
 theorem add_right_cancel {a b c : R} (h : a + b = c + b) : a = c := by
-  sorry
+  rw [←add_zero a ]
+  rw [←add_right_neg b]
+  rw [←add_assoc]
+  rw [h]
+  rw [add_assoc]
+  rw [add_right_neg b]
+  rw [add_zero]
+
 
 theorem mul_zero (a : R) : a * 0 = 0 := by
   have h : a * 0 + a * 0 = a * 0 + 0 := by
@@ -67,20 +93,30 @@ theorem mul_zero (a : R) : a * 0 = 0 := by
   rw [add_left_cancel h]
 
 theorem zero_mul (a : R) : 0 * a = 0 := by
-  sorry
+  rw [←add_right_neg a]
+  rw [add_mul]
+  rw [neg_mul]
+  rw [add_right_neg (a*a)]
+  rw [add_right_neg]
+
 
 theorem neg_eq_of_add_eq_zero {a b : R} (h : a + b = 0) : -a = b := by
-  sorry
+  rw [←add_right_neg a] at h
+  rw [add_left_cancel h]
 
 theorem eq_neg_of_add_eq_zero {a b : R} (h : a + b = 0) : a = -b := by
-  sorry
+  rw [←add_right_neg b] at h
+  rw [add_comm] at h
+  rw [add_left_cancel h]
 
 theorem neg_zero : (-0 : R) = 0 := by
   apply neg_eq_of_add_eq_zero
   rw [add_zero]
 
 theorem neg_neg (a : R) : - -a = a := by
-  sorry
+  apply neg_eq_of_add_eq_zero
+  rw [add_comm]
+  rw [add_right_neg a]
 
 end MyRing
 
@@ -99,22 +135,37 @@ example (a b : ℝ) : a - b = a + -b :=
 example (a b : ℝ) : a - b = a + -b := by
   rfl
 
+example (a b : ℝ) : a - b = a + -b := by
+  dsimp [(· - · )]
+  dsimp [(· + · )]
+  dsimp [(-·)]
+  dsimp [Sub.sub]
+  dsimp [Neg.neg]
+  dsimp [(· + · )]
+
+
+
+
 namespace MyRing
 variable {R : Type*} [Ring R]
 
 theorem self_sub (a : R) : a - a = 0 := by
-  sorry
+  rw [←add_right_neg a]
+  rw [←sub_eq_add_neg a a]
 
 theorem one_add_one_eq_two : 1 + 1 = (2 : R) := by
   norm_num
 
 theorem two_mul (a : R) : 2 * a = a + a := by
-  sorry
+  rw [←one_add_one_eq_two]
+  rw [add_mul]
+  rw [one_mul]
 
 end MyRing
 
 section
 variable (A : Type*) [AddGroup A]
+variable (B : Type*) [Group A]
 
 #check (add_assoc : ∀ a b c : A, a + b + c = a + (b + c))
 #check (zero_add : ∀ a : A, 0 + a = a)
@@ -132,15 +183,14 @@ variable {G : Type*} [Group G]
 namespace MyGroup
 
 theorem mul_inv_cancel (a : G) : a * a⁻¹ = 1 := by
-  sorry
+  group
 
 theorem mul_one (a : G) : a * 1 = a := by
-  sorry
+  group
 
 theorem mul_inv_rev (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
-  sorry
+  group
 
 end MyGroup
 
 end
-

@@ -28,6 +28,9 @@ def myPoint2 : Point :=
 def myPoint3 :=
   Point.mk 2 (-1) 4
 
+#check myPoint1
+#check Point
+
 structure Point' where build ::
   x : ℝ
   y : ℝ
@@ -61,6 +64,10 @@ protected theorem add_comm (a b : Point) : add a b = add b a := by
   repeat' apply add_comm
 
 example (a b : Point) : add a b = add b a := by simp [add, add_comm]
+example (a b : Point) : add a b = add b a := by
+  rw [Point.add_comm a b]
+  -- add_comm a b
+
 
 theorem add_x (a b : Point) : (a.add b).x = a.x + b.x :=
   rfl
@@ -81,14 +88,18 @@ theorem addAlt_comm (a b : Point) : addAlt a b = addAlt b a := by
   repeat' apply add_comm
 
 protected theorem add_assoc (a b c : Point) : (a.add b).add c = a.add (b.add c) := by
-  sorry
+  rw [add, add, add, add]
+  ext <;> dsimp
+  repeat' apply add_assoc
 
 def smul (r : ℝ) (a : Point) : Point :=
-  sorry
+  ⟨r * a.x, r * a.y, r * a.z⟩
 
 theorem smul_distrib (r : ℝ) (a b : Point) :
     (smul r a).add (smul r b) = smul r (a.add b) := by
-  sorry
+  rw [smul, smul, smul, add, add]
+  ext <;> dsimp
+  repeat' rw [mul_add]
 
 end Point
 
@@ -101,6 +112,58 @@ structure StandardTwoSimplex where
   z_nonneg : 0 ≤ z
   sum_eq : x + y + z = 1
 
+structure RatTwoSimplex where
+  x : ℚ
+  y : ℚ
+  z : ℚ
+  x_nonneg : 0 ≤ x
+  y_nonneg : 0 ≤ y
+  z_nonneg : 0 ≤ z
+  sum_eq : x + y + z = 1
+deriving Repr
+
+
+
+def mySimplex : StandardTwoSimplex :=
+  ⟨1/3, 1/3, 1/3, by norm_num, by norm_num, by norm_num, by norm_num⟩
+def myQSimplex : RatTwoSimplex :=
+  ⟨1/4, 1/8, 5/8, by norm_num, by norm_num, by norm_num, by norm_num⟩
+def myQSimplex2 : RatTwoSimplex :=
+  ⟨1/3, 1/3, 1/3, by norm_num, by norm_num, by norm_num, by norm_num⟩
+
+namespace RatTwoSimplex
+
+def swapXy (a : RatTwoSimplex) : RatTwoSimplex
+    where
+  x := a.y
+  y := a.x
+  z := a.z
+  x_nonneg := a.y_nonneg
+  y_nonneg := a.x_nonneg
+  z_nonneg := a.z_nonneg
+  sum_eq := by rw [add_comm a.y a.x, a.sum_eq]
+
+def midpoint (a b : RatTwoSimplex) : RatTwoSimplex
+    where
+  x := (a.x + b.x) / 2
+  y := (a.y + b.y) / 2
+  z := (a.z + b.z) / 2
+  x_nonneg := div_nonneg (add_nonneg a.x_nonneg b.x_nonneg) (by norm_num)
+  y_nonneg := div_nonneg (add_nonneg a.y_nonneg b.y_nonneg) (by norm_num)
+  z_nonneg := div_nonneg (add_nonneg a.z_nonneg b.z_nonneg) (by norm_num)
+  sum_eq := by field_simp; linarith [a.sum_eq, b.sum_eq]
+
+#check swapXy
+#eval myQSimplex
+#check myQSimplex.x
+#check ℚ
+#check myQSimplex.x_nonneg
+#check 0 ≤ myQSimplex.x
+#eval swapXy myQSimplex
+#eval midpoint myQSimplex myQSimplex2
+
+end RatTwoSimplex
+
 namespace StandardTwoSimplex
 
 def swapXy (a : StandardTwoSimplex) : StandardTwoSimplex
@@ -112,6 +175,10 @@ def swapXy (a : StandardTwoSimplex) : StandardTwoSimplex
   y_nonneg := a.x_nonneg
   z_nonneg := a.z_nonneg
   sum_eq := by rw [add_comm a.y a.x, a.sum_eq]
+
+#check swapXy mySimplex
+def flipped :=  swapXy mySimplex
+#check flipped.x_nonneg
 
 noncomputable section
 
@@ -126,9 +193,33 @@ def midpoint (a b : StandardTwoSimplex) : StandardTwoSimplex
   sum_eq := by field_simp; linarith [a.sum_eq, b.sum_eq]
 
 def weightedAverage (lambda : Real) (lambda_nonneg : 0 ≤ lambda) (lambda_le : lambda ≤ 1)
-    (a b : StandardTwoSimplex) : StandardTwoSimplex :=
-  sorry
-
+    (a b : StandardTwoSimplex) : StandardTwoSimplex where
+  x := lambda * a.x + (1 - lambda) * b.x
+  y := lambda * a.y + (1 - lambda) * b.y
+  z := lambda * a.z + (1 - lambda) * b.z
+  x_nonneg := add_nonneg (mul_nonneg lambda_nonneg a.x_nonneg) (by
+      apply mul_nonneg
+      · have h2 := sub_le_sub_right lambda_le lambda
+        ring_nf at h2
+        exact h2
+      · exact b.x_nonneg)
+  y_nonneg := add_nonneg (mul_nonneg lambda_nonneg a.y_nonneg) (by
+      apply mul_nonneg
+      · have h2 := sub_le_sub_right lambda_le lambda
+        ring_nf at h2
+        exact h2
+      · exact b.y_nonneg)
+  z_nonneg := add_nonneg (mul_nonneg lambda_nonneg a.z_nonneg) (by
+      apply mul_nonneg
+      · have h2 := sub_le_sub_right lambda_le lambda
+        ring_nf at h2
+        exact h2
+      · exact b.z_nonneg)
+  sum_eq := by
+    calc lambda * a.x + (1 - lambda) * b.x + (lambda * a.y + (1 - lambda) * b.y) + (lambda * a.z + (1 - lambda) * b.z) =
+      lambda * (a.x + a.y + a.z) + (1 - lambda) * (b.x + b.y + b.z) := by ring
+      _ = lambda * 1 + (1 - lambda) * 1 := by rw [a.sum_eq, b.sum_eq]
+      _ = 1 := by ring
 end
 
 end StandardTwoSimplex
@@ -206,4 +297,3 @@ variable (s : StdSimplex)
 #check s.2
 
 end
-

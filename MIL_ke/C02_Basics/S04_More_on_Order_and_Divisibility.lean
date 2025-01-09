@@ -12,6 +12,12 @@ variable (a b c d : ℝ)
 
 example : min a b = min b a := by
   apply le_antisymm
+  . simp
+  . simp
+
+
+example : min a b = min b a := by
+  apply le_antisymm
   · show min a b ≤ min b a
     apply le_min
     · apply min_le_right
@@ -28,8 +34,7 @@ example : min a b = min b a := by
     apply min_le_right
     apply min_le_left
   apply le_antisymm
-  apply h
-  apply h
+  repeat apply h
 
 example : min a b = min b a := by
   apply le_antisymm
@@ -39,17 +44,47 @@ example : min a b = min b a := by
     apply min_le_left
 
 example : max a b = max b a := by
-  sorry
+  apply ge_antisymm
+  repeat
+    apply max_le
+    apply le_max_right
+    apply le_max_left
+
 example : min (min a b) c = min a (min b c) := by
-  sorry
+  apply le_antisymm
+  . apply le_min
+    . simp
+    . simp
+  . apply le_min
+    . apply le_min
+      . simp
+      . simp
+    simp
+
 theorem aux : min a b + c ≤ min (a + c) (b + c) := by
-  sorry
+  have h2 := calc min (a + c) (b + c) = min (a + c) (b + c) + - c + c := by simp
+    _ = min (a + c - c) (b + c - c) + c := by
+      simp
+      apply le_antisymm
+      . show min (a + c) (b + c) ≤ min a b + c
+        simp
+        apply le_total
+      . show min a b + c ≤ min (a + c) (b + c)
+        simp
+    _ = min a b + c := by norm_num
+  rw [h2]
+
 example : min a b + c = min (a + c) (b + c) := by
   sorry
 #check (abs_add : ∀ a b : ℝ, |a + b| ≤ |a| + |b|)
 
-example : |a| - |b| ≤ |a - b| :=
-  sorry
+example : |a| - |b| ≤ |a - b| := by
+  rw [show |a| = |a - b + b| by simp]
+  let c : ℝ := a - b
+  rw [show a - b = c by rfl]
+  simp
+  exact abs_add c b
+
 end
 
 section
@@ -80,5 +115,3 @@ variable (m n : ℕ)
 example : Nat.gcd m n = Nat.gcd n m := by
   sorry
 end
-
-

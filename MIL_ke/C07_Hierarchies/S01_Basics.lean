@@ -60,6 +60,8 @@ class DiaOneClass₁ (α : Type) extends One₁ α, Dia₁ α where
   /-- One is a right neutral element for diamond -/
   dia_one : ∀ a : α, a ⋄ 𝟙 = a
 
+#print DiaOneClass₁
+
 
 
 set_option trace.Meta.synthInstance true in

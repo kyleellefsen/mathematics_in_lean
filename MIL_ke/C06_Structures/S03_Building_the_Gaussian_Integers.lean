@@ -6,23 +6,39 @@ import MIL.Common
 structure GaussInt where
   re : ℤ
   im : ℤ
+deriving Repr
 
 namespace GaussInt
 
 instance : Zero GaussInt :=
   ⟨⟨0, 0⟩⟩
 
+def myZero : GaussInt := 0
+#check myZero
+#eval myZero
+
 instance : One GaussInt :=
   ⟨⟨1, 0⟩⟩
 
+def myOne : GaussInt := 1
+#check myOne
+#eval myOne
+
 instance : Add GaussInt :=
   ⟨fun x y ↦ ⟨x.re + y.re, x.im + y.im⟩⟩
+
+#eval myOne + myZero
 
 instance : Neg GaussInt :=
   ⟨fun x ↦ ⟨-x.re, -x.im⟩⟩
 
 instance : Mul GaussInt :=
   ⟨fun x y ↦ ⟨x.re * y.re - x.im * y.im, x.re * y.im + x.im * y.re⟩⟩
+
+instance : Sub GaussInt :=
+  ⟨fun x y ↦ ⟨x.re - y.re, x.im - y.im⟩⟩
+
+#eval myZero - myOne
 
 theorem zero_def : (0 : GaussInt) = ⟨0, 0⟩ :=
   rfl
@@ -45,8 +61,7 @@ theorem zero_re : (0 : GaussInt).re = 0 :=
   rfl
 
 @[simp]
-theorem zero_im : (0 : GaussInt).im = 0 :=
-  rfl
+theorem zero_im : (0 : GaussInt).im = 0 := by rfl
 
 @[simp]
 theorem one_re : (1 : GaussInt).re = 1 :=
